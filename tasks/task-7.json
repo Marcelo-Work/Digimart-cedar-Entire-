@@ -1,0 +1,22 @@
+{
+  "task_id": "task-7",
+  "difficulty": "medium",
+  "description": "Vendor dashboard for product management with role-based access",
+  "branch": "task-7",
+  "test_case_location": [
+    "tasks/test-cases/task-7/public/task-7.spec.ts",
+    "evaluation/private-test-cases/task-7/private/task-7.spec.ts"
+  ],
+  "acceptance_criteria": [
+    "Log in with vendor credentials from seed data (role='vendor').",
+    "Navigate to Vendor Dashboard (/vendor/dashboard).",
+    "Verify 'Add Product' button is visible with data-testid='add-product-btn'.",
+    "Verify vendor can view only their own products in product list with data-testid='vendor-product-list'.",
+    "Log out and log in as customer, verify access to /vendor/dashboard returns 403 or redirects.",
+    "Verify vendor can edit their product: locate edit button with data-testid='edit-product'.",
+    "Verify vendor can delete their product: locate delete button with data-testid='delete-product'.",
+    "Verify changes persist after page refresh.",
+    "Verify admin user can access vendor dashboard but cannot modify vendor products they don't own.",
+    "Verify API endpoints enforce role-based access (customer API call to vendor endpoint returns 403)."
+  ]
+}

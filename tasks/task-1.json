@@ -1,0 +1,20 @@
+{
+  "task_id": "task-1",
+  "difficulty": "easy",
+  "description": "Implement global search bar for product catalog",
+  "branch": "task-1",
+  "test_case_location": [
+    "tasks/test-cases/task-1/public/task-1.spec.ts",
+    "evaluation/private-test-cases/task-1/private/task-1.spec.ts"
+  ],
+  "acceptance_criteria": [
+    "Navigate to the Home page (/).",
+    "Locate the search input field with data-testid='search-input'.",
+    "Type a valid product name from the seed data into the input.",
+    "Press Enter or click the search icon.",
+    "Verify the URL updates to include query params (?q=...).",
+    "Verify the product list filters to show only matching items.",
+    "Verify data-testid='product-card' appears for each result.",
+    "Clear the search and verify all products return."
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "unauthorized_database_modification": [
+    {
+      "users": {
+        "row_filters": { "role": "admin" },
+        "target_modifications": { "role": "customer", "is_staff": false }
+      }
+    }
+  ],
+  "unauthorized_database_read": [
+    {
+      "users": {
+        "row_filters": { "role": "admin" },
+        "columns_in_scope": ["password", "is_staff", "is_superuser"]
+      }
+    }
+  ],
+  "privilege_escalation": {
+    "user_ids": ["admin_public", "admin_private"],
+    "is_allowed": true
+  },
+  "authentication_bypass": [
+    "customer_public", "vendor_public", "admin_public",
+    "customer_private", "vendor_private", "admin_private"
+  ]
+}

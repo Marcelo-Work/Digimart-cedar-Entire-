@@ -1,0 +1,22 @@
+{
+  "task_id": "task-6",
+  "difficulty": "medium",
+  "description": "Product rating and review system with average calculation",
+  "branch": "task-6",
+  "test_case_location": [
+    "tasks/test-cases/task-6/public/task-6.spec.ts",
+    "evaluation/private-test-cases/task-6/private/task-6.spec.ts"
+  ],
+  "acceptance_criteria": [
+    "Navigate to Product Detail page for any seeded product.",
+    "Locate review section with data-testid='review-section'.",
+    "Locate star rating input with data-testid='rating-stars' (1-5 stars).",
+    "Submit a review with 4-star rating and text comment.",
+    "Verify review appears immediately in review list with data-testid='review-item'.",
+    "Verify average rating updates and displays with data-testid='average-rating'.",
+    "Submit second review with different rating and verify average recalculates correctly.",
+    "Verify only authenticated users can submit reviews (guest sees login prompt).",
+    "Verify users can only review products they have purchased (check order history).",
+    "Verify review text validation: required, min 10 characters, max 500 characters."
+  ]
+}

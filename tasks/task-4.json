@@ -1,0 +1,21 @@
+{
+  "task_id": "task-4",
+  "difficulty": "easy",
+  "description": "Contact support form with client and server validation",
+  "branch": "task-4",
+  "test_case_location": [
+    "tasks/test-cases/task-4/public/task-4.spec.ts",
+    "evaluation/private-test-cases/task-4/private/task-4.spec.ts"
+  ],
+  "acceptance_criteria": [
+    "Navigate to Contact Support page (/support).",
+    "Locate form fields: data-testid='contact-name', 'contact-email', 'contact-subject', 'contact-message'.",
+    "Submit empty form and verify required field errors appear with data-testid='field-error'.",
+    "Enter invalid email format and verify email validation error appears.",
+    "Enter valid data in all fields and submit form.",
+    "Verify success message appears with data-testid='submit-success'.",
+    "Verify form fields clear after successful submission.",
+    "Verify message length validation: error if message < 10 or > 500 characters.",
+    "Verify form is accessible to both authenticated and guest users."
+  ]
+}

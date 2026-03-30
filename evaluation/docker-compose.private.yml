@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  backend:
+    environment:
+      - SEED_SCRIPT=/app/evaluation/scripts/seed_private.py
+    volumes:
+      - ./evaluation/scripts:/app/evaluation/scripts
+      - ./data:/app/data

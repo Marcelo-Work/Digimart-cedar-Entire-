@@ -1,0 +1,22 @@
+{
+  "task_id": "task-9",
+  "difficulty": "hard",
+  "description": "Guest checkout flow allowing purchases without account creation",
+  "branch": "task-9",
+  "test_case_location": [
+    "tasks/test-cases/task-9/public/task-9.spec.ts",
+    "evaluation/private-test-cases/task-9/private/task-9.spec.ts"
+  ],
+  "acceptance_criteria": [
+    "Add product to cart without logging in (guest session).",
+    "Navigate to Cart page and verify 'Checkout as Guest' button with data-testid='guest-checkout'.",
+    "Enter guest email and required billing info in form with data-testid='guest-form'.",
+    "Complete purchase and verify order created without user account in database.",
+    "Verify order confirmation email sent to guest email with data-testid='guest-order-email'.",
+    "Verify guest can view order status via email link with unique token (data-testid='order-lookup').",
+    "Verify guest cannot access order history page (/dashboard) without authentication.",
+    "Verify guest checkout validates email format and required fields.",
+    "Verify security: guest cannot access other users' orders via ID manipulation.",
+    "Verify option to convert guest order to registered account post-purchase with data-testid='create-account'."
+  ]
+}

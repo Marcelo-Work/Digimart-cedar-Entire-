@@ -1,0 +1,22 @@
+{
+  "task_id": "task-10",
+  "difficulty": "hard",
+  "description": "Related Products recommendation engine based on category and purchase history",
+  "branch": "task-10",
+  "test_case_location": [
+    "tasks/test-cases/task-10/public/task-10.spec.ts",
+    "evaluation/private-test-cases/task-10/private/task-10.spec.ts"
+  ],
+  "acceptance_criteria": [
+    "Navigate to Product Detail page for any seeded product.",
+    "Locate 'Related Products' section with data-testid='related-products'.",
+    "Verify recommendations display products from same category as viewed product.",
+    "Verify recommendations exclude the currently viewed product.",
+    "Verify recommendations differ for products in different categories.",
+    "Verify 'Frequently Bought Together' section uses order history data from seed.",
+    "Verify recommendation algorithm respects vendor boundaries (no cross-vendor spam).",
+    "Verify caching: recommendations load quickly (<500ms) on repeated views.",
+    "Verify fallback: show popular products if insufficient related data exists.",
+    "Verify personalization: logged-in users see recommendations based on their purchase history, guests see category-based defaults."
+  ]
+}

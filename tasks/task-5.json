@@ -1,0 +1,22 @@
+{
+  "task_id": "task-5",
+  "difficulty": "medium",
+  "description": "Discount coupon code application at checkout",
+  "branch": "task-5",
+  "test_case_location": [
+    "tasks/test-cases/task-5/public/task-5.spec.ts",
+    "evaluation/private-test-cases/task-5/private/task-5.spec.ts"
+  ],
+  "acceptance_criteria": [
+    "Add at least one product to cart from seed data.",
+    "Navigate to Cart page (/cart).",
+    "Locate coupon input field with data-testid='coupon-input' and apply button with data-testid='coupon-apply'.",
+    "Enter valid coupon code from seed data (e.g., 'WELCOME10') and click apply.",
+    "Verify total price updates correctly with discount applied, shown in data-testid='cart-total'.",
+    "Verify discount amount displays separately with data-testid='discount-amount'.",
+    "Enter invalid coupon code and verify error message with data-testid='coupon-error'.",
+    "Enter expired coupon code and verify appropriate error message.",
+    "Remove coupon and verify total reverts to original price.",
+    "Verify coupon cannot be applied to orders below minimum threshold if defined in seed data."
+  ]
+}

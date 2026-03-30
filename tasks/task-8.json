@@ -1,0 +1,22 @@
+{
+  "task_id": "task-8",
+  "difficulty": "hard",
+  "description": "Real-time purchase email notifications with async processing",
+  "branch": "task-8",
+  "test_case_location": [
+    "tasks/test-cases/task-8/public/task-8.spec.ts",
+    "evaluation/private-test-cases/task-8/private/task-8.spec.ts"
+  ],
+  "acceptance_criteria": [
+    "Complete a purchase flow with valid cart items from seed data.",
+    "Verify order confirmation page displays with data-testid='order-confirmed'.",
+    "Verify email log entry is created in database with data-testid='email-log-entry'.",
+    "Verify email log contains correct order details: order_id, recipient_email, subject.",
+    "Verify async processing: checkout completes without waiting for email send (response time < 2s).",
+    "Verify email content includes product names, quantities, and total from seed data.",
+    "Verify vendor receives notification email when their product is purchased.",
+    "Verify email sending failures are logged with data-testid='email-error-log' without blocking user flow.",
+    "Verify rate limiting: multiple rapid purchases don't cause duplicate emails.",
+    "Verify email preferences: user can opt-out of marketing emails but still receive order confirmations."
+  ]
+}

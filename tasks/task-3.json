@@ -1,0 +1,21 @@
+{
+  "task_id": "task-3",
+  "difficulty": "easy",
+  "description": "Order history sorting by date and total amount",
+  "branch": "task-3",
+  "test_case_location": [
+    "tasks/test-cases/task-3/public/task-3.spec.ts",
+    "evaluation/private-test-cases/task-3/private/task-3.spec.ts"
+  ],
+  "acceptance_criteria": [
+    "Log in with valid customer credentials from seed data.",
+    "Navigate to Order History page (/dashboard/orders).",
+    "Locate the sort dropdown with data-testid='order-sort'.",
+    "Select 'Date (Newest)' option and verify orders display in descending created_at order.",
+    "Select 'Date (Oldest)' option and verify orders display in ascending created_at order.",
+    "Select 'Total (High-Low)' and verify orders sort by total_amount descending.",
+    "Select 'Total (Low-High)' and verify orders sort by total_amount ascending.",
+    "Verify sorting happens without page reload (no full refresh).",
+    "Verify sort selection persists during session using data-testid='sort-active' indicator."
+  ]
+}
