@@ -10,14 +10,16 @@ test('Base Public: Health Check', async ({ request }) => {
 test('Base Public: Home Page Loads', async ({ page }) => {
 
   test.setTimeout(60000);
-
+  
   await page.goto('http://localhost:5173/');
   
+ 
   await page.waitForSelector('[data-testid="product-card"]', { 
     state: 'visible',
     timeout: 10000 
   });
   
+
   const cards = page.locator('[data-testid="product-card"]');
   const count = await cards.count();
   expect(count).toBeGreaterThanOrEqual(3);

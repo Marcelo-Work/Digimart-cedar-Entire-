@@ -1,15 +1,19 @@
 import json
-from rest_framework import viewsets, permissions
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.contrib.auth import authenticate, login
+from rest_framework import viewsets, permissions, status
+from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
+from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .models import User, Product, Order, OrderItem, Cart
 from .serializers import UserSerializer, ProductSerializer, OrderSerializer, CartSerializer
 
+
 def health_check(request):
+    """Base App: Health endpoint for Docker health checks"""
     return JsonResponse({'status': 'healthy'}, status=200)
 
 
@@ -21,7 +25,6 @@ class LoginView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
 
-        # Fallback: Manual JSON parsing if DRF fails
         if not email or not password:
             try:
                 raw_data = json.loads(request.body)
@@ -34,11 +37,8 @@ class LoginView(APIView):
             return Response({'error': 'Email and password required'}, status=400)
 
         try:
-        
             user_obj = User.objects.get(email=email)
-            
             authenticated_user = authenticate(username=user_obj.username, password=password)
-            
         except User.DoesNotExist:
             authenticated_user = None
 
@@ -54,6 +54,7 @@ class LoginView(APIView):
             'error': 'Invalid credentials'
         }, status=400)
 
+
 @method_decorator(csrf_exempt, name='dispatch')
 class SignupView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -63,7 +64,6 @@ class SignupView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
 
-        # Fallback: Manual JSON parsing
         if not username or not email or not password:
             try:
                 raw_data = json.loads(request.body)
@@ -84,7 +84,6 @@ class SignupView(APIView):
 
         try:
             user = User(username=username, email=email)
-            
             user.set_password(password)
             
             if hasattr(user, 'role'):
@@ -101,7 +100,6 @@ class SignupView(APIView):
                     'user': UserSerializer(authenticated_user).data
                 }, status=201)
             else:
-                # Should not happen if set_password worked, but safe fallback
                 return Response({
                     'success': True, 
                     'message': 'Account created. Please login manually.',
@@ -118,8 +116,6 @@ class LogoutView(APIView):
 
     def post(self, request):
         try:
-            
-            from django.contrib.auth import logout
             logout(request)
             request.session.flush()
             
@@ -131,22 +127,25 @@ class LogoutView(APIView):
             
             return response
             
-        except Exception as e:
-            
+        except Exception:
             return Response({
                 'success': True, 
                 'message': 'Logout forced'
             }, status=200)
-            
+
+
 class UserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [permissions.AllowAny]
+    
     def get_queryset(self):
         qs = Product.objects.all()
         search = self.request.query_params.get('q')
@@ -154,11 +153,14 @@ class ProductViewSet(viewsets.ModelViewSet):
             qs = qs.filter(title__icontains=search)
         return qs
 
+
 class CartView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    
     def get(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
         return Response(CartSerializer(cart).data)
+    
     def post(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
         items = cart.items
@@ -168,6 +170,7 @@ class CartView(APIView):
             cart.items = items
             cart.save()
         return Response(CartSerializer(cart).data)
+    
     def delete(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
         product_id = request.query_params.get('product_id')
@@ -175,11 +178,14 @@ class CartView(APIView):
         cart.save()
         return Response(CartSerializer(cart).data)
 
+
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+    
     def create(self, request):
         cart = Cart.objects.get(user=request.user)
         if not cart.items:
@@ -195,3 +201,34 @@ class OrderViewSet(viewsets.ModelViewSet):
         cart.items = []
         cart.save()
         return Response(OrderSerializer(order).data, status=201)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def search_products(request):
+    """
+    Task 1: Global Search Endpoint
+    Filters products by title or description using 'q' query parameter.
+    """
+    query = request.query_params.get('q', '')
+    
+    if query:
+        products = Product.objects.filter(
+            Q(title__icontains=query) | Q(description__icontains=query)
+        )
+    else:
+        products = Product.objects.all()
+    
+    data = [
+        {
+            "id": p.id,
+            "title": p.title,
+            "price": str(p.price),
+            "description": p.description,
+            "file_url": p.file_url,
+            "vendor": p.vendor.username if p.vendor else None
+        }
+        for p in products
+    ]
+    
+    return Response(data)

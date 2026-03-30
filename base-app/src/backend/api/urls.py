@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import LoginView, SignupView,LogoutView, ProductViewSet, CartView, OrderViewSet, UserProfileView
-
+from .views import search_products
 router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='product')
 router.register(r'orders', OrderViewSet, basename='order')
@@ -12,5 +12,6 @@ urlpatterns = [
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('auth/profile/', UserProfileView.as_view(), name='profile'),
     path('cart/', CartView.as_view(), name='cart'),
+    path('products/search/', search_products, name='search-products'),
     path('', include(router.urls)),
 ]
