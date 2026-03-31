@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     health_check,
     search_products,
-    user_avatar_view,  # ✅ MUST IMPORT
+    user_avatar_view, 
+    ContactSupportView,
     LoginView,
     SignupView,
     LogoutView,
@@ -11,6 +12,7 @@ from .views import (
     ProductViewSet,
     CartView,
     OrderViewSet,
+    
 )
 
 router = DefaultRouter()
@@ -25,6 +27,7 @@ urlpatterns = [
     path('auth/profile/', UserProfileView.as_view(), name='profile'),
     path('products/search/', search_products, name='search-products'),
     path('user/avatar/', user_avatar_view, name='user-avatar'),
+    path('contact/', ContactSupportView.as_view(), name='contact-support'),
     path('cart/', CartView.as_view(), name='cart'),
     path('', include(router.urls)),
 ]

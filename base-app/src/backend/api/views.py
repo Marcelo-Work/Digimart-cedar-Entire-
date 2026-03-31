@@ -1,5 +1,8 @@
 import json
 import os
+import re
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -256,3 +259,60 @@ def user_avatar_view(request):
             return Response({'error': 'Method not allowed'}, status=405)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
+# =============================================================================
+# TASK 4: Contact Support Form
+# =============================================================================
+# ✅ CRITICAL: @csrf_exempt must be the OUTERMOST decorator
+@method_decorator(csrf_exempt, name='dispatch')
+
+class ContactSupportView(APIView):
+    """
+    Handles contact form submission with server-side validation.
+    Accessible to guests and authenticated users.
+    """
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []  # Disable authentication to bypass CSRF enforcement
+    def post(self, request):
+        name = request.data.get('name', '').strip()
+        email = request.data.get('email', '').strip()
+        subject = request.data.get('subject', '').strip()
+        message = request.data.get('message', '').strip()
+
+        errors = {}
+
+        # 1. Validate Name
+        if not name:
+            errors['name'] = 'Name is required.'
+
+        # 2. Validate Email
+        if not email:
+            errors['email'] = 'Email is required.'
+        else:
+            try:
+                validate_email(email)
+            except ValidationError:
+                errors['email'] = 'Enter a valid email address.'
+
+        # 3. Validate Subject
+        if not subject:
+            errors['subject'] = 'Subject is required.'
+
+        # 4. Validate Message (Length 10-500)
+        if not message:
+            errors['message'] = 'Message is required.'
+        else:
+            if len(message) < 10:
+                errors['message'] = 'Message must be at least 10 characters long.'
+            elif len(message) > 500:
+                errors['message'] = 'Message must not exceed 500 characters.'
+
+        # If errors exist, return them
+        if errors:
+            return Response({'errors': errors}, status=400)
+
+        # ✅ Success
+        return Response({
+            'success': True,
+            'message': 'Your message has been sent successfully!'
+        }, status=200)
