@@ -8,6 +8,7 @@
   import ProductDetail from './pages/ProductDetail.svelte';
   import Cart from './pages/Cart.svelte';
   import Dashboard from './pages/Dashboard.svelte';
+  import Profile from './pages/Profile.svelte';  
   
   let page = 'home';
   let currentUser = null;
@@ -16,19 +17,12 @@
   onMount(async () => {
     const path = window.location.pathname.slice(1) || 'home';
     page = path;
-
     try {
-      const res = await fetch('/api/auth/profile/');
-      if (res.ok) {
-        currentUser = await res.json();
-      }
+      const res = await fetch('/api/auth/profile/', { credentials: 'include' });
+      if (res.ok) currentUser = await res.json();
     } catch (e) {}
-    
     loading = false;
-
-    window.addEventListener('popstate', () => {
-      page = window.location.pathname.slice(1) || 'home';
-    });
+    window.addEventListener('popstate', () => { page = window.location.pathname.slice(1) || 'home'; });
   });
   
   function navigate(newPage) {
@@ -36,58 +30,31 @@
     window.history.pushState({}, '', `/${newPage === 'home' ? '' : newPage}`);
   }
 
-  function handleLoginEvent(event) {
-    currentUser = event.detail;
-    navigate('dashboard');
-  }
-
+  function handleLoginEvent(event) { currentUser = event.detail; navigate('dashboard'); }
   function handleLogout() {
-    fetch('/api/auth/logout/', { 
-      method: 'POST',
-      credentials: 'include' 
-    })
-    .then(res => {
-      currentUser = null;
-      navigate('home');
-    setTimeout(() => {
-        if (page !== 'home') navigate('home');
-    }, 100);
-  })
-  .catch(err => {
-    currentUser = null;
-    navigate('home');
-  });
+    fetch('/api/auth/logout/', { method: 'POST', credentials: 'include' })
+    .then(() => { currentUser = null; navigate('home'); })
+    .catch(() => { currentUser = null; navigate('home'); });
   }
 
- 
-  $: if (!loading && !currentUser && (page === 'dashboard' || page === 'cart')) {
+  $: if (!loading && !currentUser && (page === 'dashboard' || page === 'cart' || page === 'profile')) {
     navigate('login');
   }
 </script>
 
 <div class="d-flex flex-column min-vh-100">
   <Header {currentUser} {navigate} onLogout={handleLogout} />
-  
   <main class="flex-grow-1 container py-4">
     {#if loading}
       <div class="text-center"><div class="spinner-border text-primary"></div></div>
     {:else}
-      {#if page === 'home'}
-        <Home {navigate} />
-      {:else if page === 'login'}
-        <Login {navigate} on:login={handleLoginEvent} />
-      {:else if page === 'signup'}
-        <Signup {navigate} on:login={handleLoginEvent} />
-      {:else if page === 'product'}
-        <ProductDetail {navigate} />
-      {:else if page === 'cart'}
-        {#if currentUser}<Cart {navigate} />{:else}<div>Please login.</div>{/if}
-      {:else if page === 'dashboard'}
-        {#if currentUser}
-          <Dashboard {navigate} {currentUser} />
-        {:else}
-          <div class="alert alert-warning">Access Denied. Redirecting...</div>
-        {/if}
+      {#if page === 'home'}<Home {navigate} />
+      {:else if page === 'login'}<Login {navigate} on:login={handleLoginEvent} />
+      {:else if page === 'signup'}<Signup {navigate} on:login={handleLoginEvent} />
+      {:else if page === 'product'}<ProductDetail {navigate} />
+      {:else if page === 'cart'}{#if currentUser}<Cart {navigate} />{:else}<div class="alert alert-warning">Please login.</div>{/if}
+      {:else if page === 'dashboard'}{#if currentUser}<Dashboard {navigate} {currentUser} />{:else}<div class="alert alert-warning">Access Denied.</div>{/if}
+      {:else if page === 'profile'}{#if currentUser}<Profile {navigate} {currentUser} />{:else}<div class="alert alert-warning">Please login.</div>{/if}  <!-- ✅ MUST HAVE -->
       {/if}
     {/if}
   </main>

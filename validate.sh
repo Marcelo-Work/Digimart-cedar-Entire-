@@ -37,7 +37,6 @@ branch_count=$(git branch 2>/dev/null | wc -l)
 [ "$branch_count" -eq 11 ]; check $? "reference-solutions has 11 branches"
 cd ..
 
-# Summary
 echo ""
 echo "=========================================="
 echo "  RESULTS: $PASS passed, $FAIL failed"

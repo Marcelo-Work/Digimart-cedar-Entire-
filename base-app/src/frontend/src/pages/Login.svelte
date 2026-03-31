@@ -1,40 +1,37 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
   export let navigate;
-
+  
+  const dispatch = createEventDispatcher();
+  
   let email = '';
   let password = '';
-  let error = '';
+  let errorMessage = '';
   let loading = false;
 
-  async function handleLogin(e) {
-    e.preventDefault();
+  async function handleLogin(event) {
+    event.preventDefault();
     loading = true;
-    error = '';
-
-    if (!email || !password) {
-      error = 'Please enter email and password.';
-      loading = false;
-      return;
-    }
-
+    errorMessage = '';
+    
     try {
       const res = await fetch('/api/auth/login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password })
       });
-
+      
       const data = await res.json();
-
+      
       if (res.ok && data.success) {
         dispatch('login', data.user);
       } else {
-        error = data.error || 'Login failed';
+        errorMessage = data.error || 'Login failed';
       }
-    } catch (err) {
-      error = 'Network error. Is backend running?';
+    } catch (e) {
+      console.error('Login error:', e);
+      errorMessage = 'Network error. Please try again.';
     } finally {
       loading = false;
     }
@@ -44,26 +41,57 @@
 <div class="row justify-content-center">
   <div class="col-md-6 col-lg-4">
     <div class="card shadow-sm">
-      <div class="card-body p-4">
-        <h2 class="text-center mb-4 text-primary">Login to DigiMart</h2>
-        {#if error}
-          <div class="alert alert-danger">{error}</div>
+      <div class="card-body">
+        <h3 class="card-title text-center mb-4">Login to DigiMart</h3>
+        
+        {#if errorMessage}
+          <div class="alert alert-danger" role="alert" data-testid="error-message">
+            {errorMessage}
+          </div>
         {/if}
+        
         <form on:submit={handleLogin}>
           <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-control" bind:value={email} placeholder="customer@public.com" required />
+            <label for="email" class="form-label">Email</label>
+            <input 
+              type="email" 
+              class="form-control" 
+              id="email"
+              bind:value={email}
+              data-testid="email-input"
+              required
+              placeholder="Enter your email"
+            />
           </div>
+          
           <div class="mb-3">
-            <label class="form-label">Password</label>
-            <input type="password" class="form-control" bind:value={password} placeholder="PublicPass123!" required />
+            <label for="password" class="form-label">Password</label>
+            <input 
+              type="password" 
+              class="form-control" 
+              id="password"
+              bind:value={password}
+              data-testid="password-input"
+              required
+              placeholder="Enter your password"
+            />
           </div>
-          <button type="submit" class="btn btn-primary w-100" disabled={loading}>
-            {#if loading}Logging in...{:else}Login{/if}
+          
+          <button 
+            type="submit" 
+            class="btn btn-primary w-100"
+            data-testid="login-button"
+            disabled={loading}
+          >
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-        <div class="mt-3 text-center">
-          <a href="/signup" on:click|preventDefault={() => navigate('signup')}>Need an account? Sign Up</a>
+        
+        <div class="text-center mt-3">
+          <small>
+            Don't have an account? 
+            <a href="/signup" on:click|preventDefault={() => navigate('signup')}>Sign up</a>
+          </small>
         </div>
       </div>
     </div>
