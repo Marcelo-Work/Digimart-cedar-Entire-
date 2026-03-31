@@ -23,6 +23,7 @@
 {:else if products.length === 0}
   <p>No products available.</p>
 {:else}
+  
   <div class="row row-cols-1 row-cols-md-3 g-4">
     {#each products as product}
       <div class="col">

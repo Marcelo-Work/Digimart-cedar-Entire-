@@ -60,7 +60,7 @@ Peer Reviewer Notes: All items verified and passing.
 
 
 
-Reviewer Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+Reviewer Signature:
 
-Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+Date: 
 

@@ -9,7 +9,7 @@
   import Cart from './pages/Cart.svelte';
   import Dashboard from './pages/Dashboard.svelte';
   import Profile from './pages/Profile.svelte';  
-  
+  import Orders from './pages/Orders.svelte';
   let page = 'home';
   let currentUser = null;
   let loading = true;
@@ -54,7 +54,8 @@
       {:else if page === 'product'}<ProductDetail {navigate} />
       {:else if page === 'cart'}{#if currentUser}<Cart {navigate} />{:else}<div class="alert alert-warning">Please login.</div>{/if}
       {:else if page === 'dashboard'}{#if currentUser}<Dashboard {navigate} {currentUser} />{:else}<div class="alert alert-warning">Access Denied.</div>{/if}
-      {:else if page === 'profile'}{#if currentUser}<Profile {navigate} {currentUser} />{:else}<div class="alert alert-warning">Please login.</div>{/if}  <!-- ✅ MUST HAVE -->
+      {:else if page === 'profile'}{#if currentUser}<Profile {navigate} {currentUser} />{:else}<div class="alert alert-warning">Please login.</div>{/if}
+      {:else if page === 'orders'}{#if currentUser}<Orders {navigate} {currentUser} />{:else}<div class="alert alert-warning">Please login to view orders.</div>{/if}
       {/if}
     {/if}
   </main>

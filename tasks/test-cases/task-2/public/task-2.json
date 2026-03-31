@@ -11,7 +11,7 @@
     "Log in with valid credentials from seed data.",
     "Navigate to the Profile page (/dashboard/profile).",
     "Locate the file input with data-testid='avatar-upload'.",
-    "Upload a valid PNG image file under 2MB.",
+    "Upload a valid PNG image file under 5MB.",
     "Verify success message appears with data-testid='upload-success'.",
     "Verify the avatar image displays immediately after upload with data-testid='user-avatar'.",
     "Refresh the page and verify the avatar persists.",

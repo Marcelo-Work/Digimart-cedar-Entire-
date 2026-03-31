@@ -129,25 +129,67 @@ class CartView(APIView):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
+    """
+    Task 3: Order History with Sorting and Filtering
+    GET /api/orders/?sort=created_at|total_amount|status&order=asc|desc&status=pending|completed|cancelled
+    """
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        """Get orders for current user with sorting and filtering"""
+        qs = Order.objects.filter(user=self.request.user)
+        
+        # Get sort parameters from query string
+        sort_by = self.request.query_params.get('sort', 'created_at')
+        order = self.request.query_params.get('order', 'desc')
+        status_filter = self.request.query_params.get('status', '')
+        
+        # Validate sort field (security: prevent SQL injection)
+        valid_sort_fields = ['created_at', 'total_amount', 'status']
+        if sort_by not in valid_sort_fields:
+            sort_by = 'created_at'
+        
+        # Apply ordering
+        if order == 'asc':
+            qs = qs.order_by(sort_by)
+        else:
+            qs = qs.order_by(f'-{sort_by}')
+        
+        # Apply status filter
+        if status_filter:
+            valid_statuses = ['pending', 'completed', 'cancelled']
+            if status_filter in valid_statuses:
+                qs = qs.filter(status=status_filter)
+        
+        return qs
+    
     def create(self, request):
+        """Create new order from cart"""
         cart = Cart.objects.get(user=request.user)
         if not cart.items:
             return Response({'error': 'Cart is empty'}, status=400)
+        
         total = 0
         order = Order.objects.create(user=request.user, total_amount=0, status='completed')
+        
         for item in cart.items:
             product = Product.objects.get(id=item['product_id'])
             total += float(product.price) * item['quantity']
             OrderItem.objects.create(order=order, product=product, quantity=item['quantity'])
+        
         order.total_amount = total
         order.save()
         cart.items = []
         cart.save()
+        
         return Response(OrderSerializer(order).data, status=201)
+    
+    def list(self, request):
+        """List orders with sorting (explicit override for clarity)"""
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 @api_view(['GET'])
