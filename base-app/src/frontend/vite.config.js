@@ -5,12 +5,11 @@ export default defineConfig({
   plugins: [svelte()],
   server: {
     port: 5173,
-    host: true,
     proxy: {
-      '/api': 'http://localhost:3000',  // Must be localhost, NOT 'backend'
-      '/health': 'http://localhost:3000',
-      '/media': 'http://localhost:3000'
-    }
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    },
   },
-  build: { outDir: 'dist', sourcemap: false }
 })

@@ -26,7 +26,7 @@
   <div class="row row-cols-1 row-cols-md-3 g-4">
     {#each products as product}
       <div class="col">
-        <div class="card h-100 d-flex flex-column shadow-sm">
+        <div class="card h-100 d-flex flex-column shadow-sm" data-testid ="product-card">
         
           <div class="card-body d-flex flex-column">
             <h5 class="card-title">{product.title}</h5>
