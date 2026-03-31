@@ -260,10 +260,6 @@ def user_avatar_view(request):
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
-# =============================================================================
-# TASK 4: Contact Support Form
-# =============================================================================
-# ✅ CRITICAL: @csrf_exempt must be the OUTERMOST decorator
 @method_decorator(csrf_exempt, name='dispatch')
 
 class ContactSupportView(APIView):
