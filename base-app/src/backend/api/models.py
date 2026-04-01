@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
+from django.utils import timezone
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -73,12 +73,34 @@ class OrderItem(models.Model):
 
 
 class Cart(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     items = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
     
+
+    coupon_code = models.CharField(max_length=50, blank=True, null=True)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     class Meta:
         db_table = 'api_cart'
     
     def __str__(self):
         return f"Cart for {self.user.username}"
+class Coupon(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+  
+    discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0.00) 
+    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.code} ({self.discount_percent}%)"
+
+    def is_valid(self):
+        """Check if coupon is active and not expired"""
+        if not self.is_active:
+            return False
+        if self.expires_at and timezone.now() > self.expires_at:
+            return False
+        return True

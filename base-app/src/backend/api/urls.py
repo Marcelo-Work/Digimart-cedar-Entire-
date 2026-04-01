@@ -12,6 +12,7 @@ from .views import (
     ProductViewSet,
     CartView,
     OrderViewSet,
+    validate_coupon_view
     
 )
 
@@ -29,5 +30,7 @@ urlpatterns = [
     path('user/avatar/', user_avatar_view, name='user-avatar'),
     path('contact/', ContactSupportView.as_view(), name='contact-support'),
     path('cart/', CartView.as_view(), name='cart'),
+    path('cart/validate-coupon/', validate_coupon_view, name='validate-coupon'),
+    path('cart/apply-coupon/', CartView.as_view(), name='apply-coupon'),
     path('', include(router.urls)),
 ]
