@@ -19,13 +19,9 @@ from .models import Coupon
 from .serializers import CouponSerializer
 from decimal import Decimal
 from django.utils import timezone
-from rest_framework.authentication import SessionAuthentication
+from .authentication import CsrfExemptSessionAuthentication
 
 
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    """Session authentication without CSRF enforcement for API endpoints"""
-    def enforce_csrf(self, request):
-        return  # Skip CSRF check
 def health_check(request):
     return JsonResponse({'status': 'healthy'}, status=200)
 

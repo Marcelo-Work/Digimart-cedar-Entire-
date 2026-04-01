@@ -100,7 +100,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- Django REST Framework ---
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': ['api.views.CsrfExemptSessionAuthentication'],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['api.authentication.CsrfExemptSessionAuthentication'],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
 }
 
