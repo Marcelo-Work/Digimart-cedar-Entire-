@@ -616,3 +616,50 @@ def product_detail_with_reviews(request, pk):
         return Response(serializer.data)
     except Product.DoesNotExist:
         return Response({'error': 'Product not found'}, status=404)
+class IsVendorOrAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # Must be authenticated
+        if not request.user or not request.user.is_authenticated:
+            return False
+        # Only Vendor or Admin can access
+        profile = getattr(request.user, 'profile', None)
+        if not profile:
+            return False
+        return profile.role in ['vendor', 'admin']
+
+class VendorProductViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for vendors to manage THEIR OWN products.
+    Admins can view all but only edit their own (if any).
+    """
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated, IsVendorOrAdmin]
+
+    def get_queryset(self):
+        user = self.request.user
+        profile = getattr(user, 'profile', None)
+        
+        # If Admin: Can see ALL products (for dashboard overview)
+        if profile and profile.role == 'admin':
+            return Product.objects.all()
+        
+        # If Vendor: Can ONLY see their own products
+        return Product.objects.filter(vendor=user)
+
+    def perform_create(self, serializer):
+        # Force the vendor to be the current user
+        serializer.save(vendor=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Prevent Admin from editing Vendor's product (Optional based on criteria "cannot modify vendor products they don't own")
+        if request.user.profile.role == 'admin' and instance.vendor != request.user:
+            return Response({'error': 'Admins cannot modify products owned by other vendors.'}, status=403)
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Prevent Admin from deleting Vendor's product
+        if request.user.profile.role == 'admin' and instance.vendor != request.user:
+            return Response({'error': 'Admins cannot delete products owned by other vendors.'}, status=403)
+        return super().destroy(request, *args, **kwargs)

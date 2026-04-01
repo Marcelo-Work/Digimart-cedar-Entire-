@@ -1,0 +1,116 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - link "🛒 DigiMart" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e7]:
+        - list [ref=e8]:
+          - listitem [ref=e9]:
+            - link "Home" [ref=e10] [cursor=pointer]:
+              - /url: /
+          - link "Vendor Dashboard" [ref=e11] [cursor=pointer]:
+            - /url: /vendor/dashboard
+          - listitem [ref=e12]:
+            - link "Dashboard" [ref=e13] [cursor=pointer]:
+              - /url: /dashboard
+          - link "Orders" [ref=e14] [cursor=pointer]:
+            - /url: /orders
+          - listitem [ref=e15]:
+            - link "Cart" [ref=e16] [cursor=pointer]:
+              - /url: /cart
+          - listitem [ref=e17]:
+            - link "Support" [ref=e18] [cursor=pointer]:
+              - /url: /support
+          - listitem [ref=e19]:
+            - link "Profile" [ref=e20] [cursor=pointer]:
+              - /url: /profile
+        - list [ref=e21]:
+          - listitem [ref=e22]:
+            - generic [ref=e23]:
+              - text: Welcome,
+              - strong [ref=e24]: vendor_public
+          - listitem [ref=e25]:
+            - button "Logout" [ref=e26] [cursor=pointer]
+  - main [ref=e27]:
+    - generic [ref=e28]:
+      - heading "Vendor Dashboard" [level=2] [ref=e29]
+      - generic [ref=e30]:
+        - heading "Add New Product" [level=4] [ref=e31]
+        - generic [ref=e32]:
+          - generic [ref=e33]: Title
+          - textbox [ref=e34]
+        - generic [ref=e35]:
+          - generic [ref=e36]: Description
+          - textbox [ref=e37]
+        - generic [ref=e38]:
+          - generic [ref=e39]: Price
+          - spinbutton [ref=e40]
+        - generic [ref=e41]:
+          - generic [ref=e42]: Image URL
+          - textbox "https://..." [ref=e43]
+        - button "Add Product" [ref=e45] [cursor=pointer]
+      - heading "Your Products" [level=4] [ref=e46]
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - heading "Premium Wireless Headphones" [level=5] [ref=e50]
+            - paragraph [ref=e51]: High quality Premium Wireless Headphones for sale.
+            - generic [ref=e52]: $99.00
+          - generic [ref=e53]:
+            - button "Edit" [ref=e54] [cursor=pointer]
+            - button "Delete" [ref=e55] [cursor=pointer]
+        - generic [ref=e56]:
+          - generic [ref=e57]:
+            - heading "Mechanical Gaming Keyboard" [level=5] [ref=e58]
+            - paragraph [ref=e59]: High quality Mechanical Gaming Keyboard for sale.
+            - generic [ref=e60]: $99.00
+          - generic [ref=e61]:
+            - button "Edit" [ref=e62] [cursor=pointer]
+            - button "Delete" [ref=e63] [cursor=pointer]
+        - generic [ref=e64]:
+          - generic [ref=e65]:
+            - heading "4K Ultra HD Monitor" [level=5] [ref=e66]
+            - paragraph [ref=e67]: High quality 4K Ultra HD Monitor for sale.
+            - generic [ref=e68]: $99.00
+          - generic [ref=e69]:
+            - button "Edit" [ref=e70] [cursor=pointer]
+            - button "Delete" [ref=e71] [cursor=pointer]
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - heading "Ergonomic Office Chair" [level=5] [ref=e74]
+            - paragraph [ref=e75]: High quality Ergonomic Office Chair for sale.
+            - generic [ref=e76]: $99.00
+          - generic [ref=e77]:
+            - button "Edit" [ref=e78] [cursor=pointer]
+            - button "Delete" [ref=e79] [cursor=pointer]
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - heading "USB-C Hub Adapter" [level=5] [ref=e82]
+            - paragraph [ref=e83]: High quality USB-C Hub Adapter for sale.
+            - generic [ref=e84]: $99.00
+          - generic [ref=e85]:
+            - button "Edit" [ref=e86] [cursor=pointer]
+            - button "Delete" [ref=e87] [cursor=pointer]
+        - generic [ref=e88]:
+          - generic [ref=e89]:
+            - heading "Bag" [level=5] [ref=e90]
+            - paragraph [ref=e91]: Good
+            - generic [ref=e92]: $20.00
+          - generic [ref=e93]:
+            - button "Edit" [ref=e94] [cursor=pointer]
+            - button "Delete" [ref=e95] [cursor=pointer]
+  - contentinfo [ref=e96]:
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - heading "DigiMart" [level=5] [ref=e100]
+        - paragraph [ref=e101]: Your trusted digital marketplace
+      - generic [ref=e102]:
+        - link "Terms" [ref=e103] [cursor=pointer]:
+          - /url: "#"
+        - link "Privacy" [ref=e104] [cursor=pointer]:
+          - /url: "#"
+        - paragraph [ref=e105]: © 2026 DigiMart. All rights reserved.
+```

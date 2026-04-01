@@ -108,8 +108,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         return False
 
 class ProductSerializer(serializers.ModelSerializer):
+    vendor_name = serializers.CharField(source='vendor.username', read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     
     class Meta:
         model = Product
-        fields = '__all__' # Includes average_rating and review_count
+        fields = ['id', 'title', 'description', 'price', 'file_url', 'vendor', 'vendor_name', 'average_rating', 'review_count', 'created_at','reviews'] 
+        read_only_fields = ['vendor', 'created_at', 'average_rating', 'review_count']# Includes average_rating and review_count
