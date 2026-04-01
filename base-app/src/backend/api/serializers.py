@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Product, Order, OrderItem, Cart, Profile
+from .models import Product, Order, OrderItem, Cart, Coupon
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -51,4 +51,10 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ['id', 'user', 'items', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+class CouponSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Coupon
+        fields = ['id', 'code', 'discount_percent', 'min_order_amount', 'expires_at', 'is_active']
         read_only_fields = ['id', 'created_at']

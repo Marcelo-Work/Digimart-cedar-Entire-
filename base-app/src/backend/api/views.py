@@ -14,7 +14,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .models import User, Product, Order, OrderItem, Cart, Profile
 from .serializers import UserSerializer, ProductSerializer, OrderSerializer, CartSerializer
-
+from .models import Coupon
+from .serializers import CouponSerializer
+from decimal import Decimal
 
 def health_check(request):
     return JsonResponse({'status': 'healthy'}, status=200)
@@ -113,7 +115,80 @@ class CartView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
-        return Response(CartSerializer(cart).data)
+        
+        # Calculate Raw Total
+        raw_total = Decimal('0.00')
+        for item in cart.items:
+            try:
+                product = Product.objects.get(id=item['product_id'])
+                raw_total += Decimal(str(product.price)) * Decimal(str(item['quantity']))
+            except: pass
+
+        # Apply Saved Coupon if exists
+        discount = Decimal('0.00')
+        applied_code = None
+        
+        if cart.coupon_code:
+            try:
+                coupon = Coupon.objects.get(code=cart.coupon_code)
+                if coupon.is_valid() and raw_total >= coupon.min_order_amount:
+                    discount = raw_total * (coupon.discount_percent / Decimal('100'))
+                    applied_code = coupon.code
+                else:
+                    # Invalid now (expired), clear it
+                    cart.coupon_code = None
+                    cart.discount_amount = Decimal('0.00')
+                    cart.save()
+            except Coupon.DoesNotExist:
+                cart.coupon_code = None
+                cart.save()
+
+        final_total = raw_total - discount
+
+        data = CartSerializer(cart).data
+        data['raw_total'] = float(raw_total)
+        data['discount_amount'] = float(discount)
+        data['final_total'] = float(final_total)
+        data['applied_coupon'] = applied_code
+        
+        return Response(data)
+    
+    def patch(self, request):
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        action = request.data.get('action')
+        
+        if action == 'apply_coupon':
+            code = request.data.get('code', '').strip().upper()
+            # Re-run validation logic from validate_coupon_view briefly
+            try:
+                coupon = Coupon.objects.get(code=code)
+                if not coupon.is_valid():
+                    return Response({'error': 'Expired or inactive'}, status=400)
+                
+                # Calc raw total again
+                raw_total = Decimal('0.00')
+                for item in cart.items:
+                    try:
+                        p = Product.objects.get(id=item['product_id'])
+                        raw_total += Decimal(str(p.price)) * Decimal(str(item['quantity']))
+                    except: pass
+                
+                if raw_total < coupon.min_order_amount:
+                    return Response({'error': 'Minimum order not met'}, status=400)
+
+                cart.coupon_code = code
+                cart.save()
+                return self.get(request) # Return updated cart
+            except Coupon.DoesNotExist:
+                return Response({'error': 'Invalid code'}, status=400)
+                
+        elif action == 'remove_coupon':
+            cart.coupon_code = None
+            cart.discount_amount = Decimal('0.00')
+            cart.save()
+            return self.get(request)
+
+        return Response({'error': 'Invalid action'}, status=400)
     def post(self, request):
         cart, _ = Cart.objects.get_or_create(user=request.user)
         items = cart.items
@@ -312,3 +387,43 @@ class ContactSupportView(APIView):
             'success': True,
             'message': 'Your message has been sent successfully!'
         }, status=200)
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def validate_coupon_view(request):
+    
+    code = request.data.get('code', '').strip().upper()
+    cart_total = Decimal(str(request.data.get('cart_total', 0)))
+
+    if not code:
+        return Response({'error': 'Coupon code is required'}, status=400)
+
+    try:
+        coupon = Coupon.objects.get(code=code)
+    except Coupon.DoesNotExist:
+        return Response({'error': 'Invalid coupon code'}, status=400)
+
+    # 1. Check Active & Expiry
+    if not coupon.is_valid():
+        if coupon.expires_at and timezone.now() > coupon.expires_at:
+            return Response({'error': 'This coupon has expired'}, status=400)
+        return Response({'error': 'This coupon is no longer active'}, status=400)
+
+    # 2. Check Minimum Order Amount
+    if cart_total < coupon.min_order_amount:
+        return Response({
+            'error': f'Minimum order amount for this coupon is ${coupon.min_order_amount}'
+        }, status=400)
+
+    # 3. Calculate Discount
+    discount_amount = cart_total * (coupon.discount_percent / Decimal('100'))
+    new_total = cart_total - discount_amount
+
+    return Response({
+        'valid': True,
+        'code': coupon.code,
+        'discount_percent': float(coupon.discount_percent),
+        'discount_amount': float(discount_amount),
+        'original_total': float(cart_total),
+        'new_total': float(new_total)
+    })
