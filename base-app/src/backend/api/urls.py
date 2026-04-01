@@ -14,6 +14,7 @@ from .views import (
     OrderViewSet,
     ReviewViewSet,
     VendorProductViewSet,
+    EmailLogViewSet,
     product_detail_with_reviews,
     validate_coupon_view
     
@@ -24,6 +25,7 @@ router.register(r'products', ProductViewSet, basename='product')
 router.register(r'orders', OrderViewSet, basename='order')
 router.register(r'reviews', ReviewViewSet, basename='review')
 router.register(r'vendor/products', VendorProductViewSet, basename='vendor-product')
+router.register(r'email-logs', EmailLogViewSet, basename='email-log')
 urlpatterns = [
     path('health/', health_check, name='health-check'),
     path('auth/login/', LoginView.as_view(), name='login'),

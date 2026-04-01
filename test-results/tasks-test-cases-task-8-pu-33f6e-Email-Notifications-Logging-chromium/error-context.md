@@ -1,0 +1,49 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - link "🛒 DigiMart" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e7]:
+        - list [ref=e8]:
+          - listitem [ref=e9]:
+            - link "Home" [ref=e10] [cursor=pointer]:
+              - /url: /
+        - list [ref=e11]:
+          - listitem [ref=e12]:
+            - link "Login" [ref=e13] [cursor=pointer]:
+              - /url: /login
+          - listitem [ref=e14]:
+            - link "Sign Up" [ref=e15] [cursor=pointer]:
+              - /url: /signup
+  - main [ref=e16]:
+    - generic [ref=e20]:
+      - heading "Login to DigiMart" [level=3] [ref=e21]
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]: Email
+          - textbox "Email" [ref=e25]:
+            - /placeholder: Enter your email
+        - generic [ref=e26]:
+          - generic [ref=e27]: Password
+          - textbox "Password" [ref=e28]:
+            - /placeholder: Enter your password
+        - button "Login" [ref=e29] [cursor=pointer]
+      - generic [ref=e31]:
+        - text: Don't have an account?
+        - link "Sign up" [ref=e32] [cursor=pointer]:
+          - /url: /signup
+  - contentinfo [ref=e33]:
+    - generic [ref=e35]:
+      - generic [ref=e36]:
+        - heading "DigiMart" [level=5] [ref=e37]
+        - paragraph [ref=e38]: Your trusted digital marketplace
+      - generic [ref=e39]:
+        - link "Terms" [ref=e40] [cursor=pointer]:
+          - /url: "#"
+        - link "Privacy" [ref=e41] [cursor=pointer]:
+          - /url: "#"
+        - paragraph [ref=e42]: © 2026 DigiMart. All rights reserved.
+```

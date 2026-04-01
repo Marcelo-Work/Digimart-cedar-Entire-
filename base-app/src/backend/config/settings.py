@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'background_task',
     'api',
 ]
 
@@ -120,3 +121,10 @@ SESSION_COOKIE_AGE = 1209600
 # --- CSRF Settings for API ---
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' 
+# OR use locmem to inspect via code:
+# EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+# Rate Limiting Setting
+EMAIL_RATE_LIMIT_SECONDS = 60  # Prevent duplicates within 1 minute
