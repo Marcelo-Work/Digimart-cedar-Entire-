@@ -30,8 +30,11 @@
     // 2. Fetch User Profile
     try {
       const res = await fetch("/api/auth/profile/", { credentials: "include" });
-      if (res.ok) currentUser = await res.json();
-    } catch (e) {}
+      if (res.ok) {currentUser = await res.json();}
+      else {
+        currentUser = null;
+      }
+    } catch (e) {currentUser = null;}
     
     loading = false;
 
@@ -96,11 +99,11 @@
       <Signup {navigate} on:login={handleLoginEvent} />
       
     {:else if  page.startsWith("product")}
-      <ProductDetail {navigate} />
+      <ProductDetail {navigate} {currentUser} />
       
     {:else if page === "cart"}
       {#if currentUser}
-        <Cart {navigate} />
+        <Cart {navigate} {currentUser}/>
       {:else}
         <div class="alert alert-warning">Please login to view cart.</div>
       {/if}

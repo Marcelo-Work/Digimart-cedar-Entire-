@@ -12,6 +12,8 @@ from .views import (
     ProductViewSet,
     CartView,
     OrderViewSet,
+    ReviewViewSet,
+    product_detail_with_reviews,
     validate_coupon_view
     
 )
@@ -19,7 +21,7 @@ from .views import (
 router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='product')
 router.register(r'orders', OrderViewSet, basename='order')
-
+router.register(r'reviews', ReviewViewSet, basename='review')
 urlpatterns = [
     path('health/', health_check, name='health-check'),
     path('auth/login/', LoginView.as_view(), name='login'),
@@ -32,5 +34,6 @@ urlpatterns = [
     path('cart/', CartView.as_view(), name='cart'),
     path('cart/validate-coupon/', validate_coupon_view, name='validate-coupon'),
     path('cart/apply-coupon/', CartView.as_view(), name='apply-coupon'),
+    path('products/<int:pk>/', product_detail_with_reviews, name='product-detail'),
     path('', include(router.urls)),
 ]

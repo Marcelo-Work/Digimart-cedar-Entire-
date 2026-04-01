@@ -1,8 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Product, Order, OrderItem, Cart, Coupon
-
-
+from .models import Product, Order, OrderItem, Cart, Coupon,Review
 class UserSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
@@ -84,3 +82,34 @@ class CouponSerializer(serializers.ModelSerializer):
         model = Coupon
         fields = ['id', 'code', 'discount_percent', 'min_order_amount', 'expires_at', 'is_active']
         read_only_fields = ['id', 'created_at']
+        
+class ReviewSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    user_avatar = serializers.SerializerMethodField()
+    can_delete = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Review
+        fields = ['id', 'product', 'user', 'username', 'user_avatar', 'rating', 'comment', 'created_at', 'can_delete']
+        read_only_fields = ['user', 'created_at', 'username', 'user_avatar', 'can_delete']
+
+    def get_user_avatar(self, obj):
+        profile = getattr(obj.user, 'profile', None)
+        if profile and profile.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(profile.avatar.url)
+        return None
+
+    def get_can_delete(self, obj):
+        request = self.context.get('request')
+        if request and request.user == obj.user:
+            return True
+        return False
+
+class ProductSerializer(serializers.ModelSerializer):
+    reviews = ReviewSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Product
+        fields = '__all__' # Includes average_rating and review_count

@@ -14,17 +14,19 @@ from rest_framework.decorators import api_view, permission_classes
 
 from rest_framework.response import Response
 from rest_framework import viewsets, permissions, status
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.db.models import Q
-from .models import User, Product, Order, OrderItem, Cart, Profile
+from .models import User, Product, Order, OrderItem, Cart, Profile,Review
 from .serializers import UserSerializer, ProductSerializer, OrderSerializer, CartSerializer
 from .models import Coupon
 from .serializers import CouponSerializer
 from decimal import Decimal
 from django.utils import timezone
 from .authentication import CsrfExemptSessionAuthentication
-
+from .serializers import ReviewSerializer, ProductSerializer
+from django.db.models import Avg, Count
 
 def health_check(request):
     return JsonResponse({'status': 'healthy'}, status=200)
@@ -570,3 +572,47 @@ def validate_coupon_view(request):
         'original_total': float(cart_total),
         'new_total': float(new_total)
     })
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticated] # Must be logged in to review
+
+    def get_queryset(self):
+        # Filter by product if query param exists
+        product_id = self.request.query_params.get('product_id')
+        if product_id:
+            return Review.objects.filter(product_id=product_id)
+        return Review.objects.all()
+
+    def perform_create(self, serializer):
+        product_id = self.request.data.get('product')
+        
+        has_purchased = OrderItem.objects.filter(
+            order__user=self.request.user,
+            order__status='completed', # Only completed orders count
+            product_id=product_id
+        ).exists()
+
+        if not has_purchased:
+            raise serializers.ValidationError("You can only review products you have purchased.")
+
+        # Check if already reviewed
+        if Review.objects.filter(user=self.request.user, product_id=product_id).exists():
+            raise serializers.ValidationError("You have already reviewed this product.")
+
+        review = serializer.save(user=self.request.user)
+        
+        # Update Product Stats
+        review.product.update_rating_stats()
+
+# API View to get product details with reviews (Optional if using ViewSet)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def product_detail_with_reviews(request, pk):
+    try:
+        product = Product.objects.get(pk=pk)
+        serializer = ProductSerializer(product)
+        return Response(serializer.data)
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found'}, status=404)
