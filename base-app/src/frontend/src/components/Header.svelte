@@ -5,7 +5,6 @@
   export let navigate = () => {};
 
   const dispatch = createEventDispatcher();
-  
 
   function handleLogoutClick() {
     dispatch("logout", {});
@@ -38,7 +37,7 @@
     </button>
 
     <!-- Nav Links -->
-   
+
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
@@ -48,7 +47,14 @@
             on:click|preventDefault={() => navigate("home")}>Home</a
           >
         </li>
-
+        {#if currentUser && currentUser.role === "vendor"}
+          <a
+            class="nav-link"
+            href="/vendor/dashboard"
+            on:click|preventDefault={() => navigate("vendor/dashboard")}
+            >Vendor Dashboard</a
+          >
+        {/if}
         {#if currentUser}
           <li class="nav-item">
             <a
