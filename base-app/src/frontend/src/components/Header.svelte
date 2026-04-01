@@ -5,14 +5,7 @@
   export let navigate = () => {};
 
   const dispatch = createEventDispatcher();
-  let searchQuery = "";
-
-  function handleSearch(event) {
-    event.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`search?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  }
+  
 
   function handleLogoutClick() {
     dispatch("logout", {});
@@ -45,21 +38,7 @@
     </button>
 
     <!-- Nav Links -->
-    <form
-      class="d-flex mx-auto"
-      style="max-width: 400px;"
-      on:submit={handleSearch}
-    >
-      <input
-        class="form-control me-2"
-        type="search"
-        placeholder="Search products..."
-        aria-label="Search"
-        bind:value={searchQuery}
-        data-testid="search-input"
-      />
-      <button class="btn btn-outline-light" type="submit">Search</button>
-    </form>
+   
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
@@ -90,6 +69,13 @@
               class="nav-link"
               href="/cart"
               on:click|preventDefault={() => navigate("cart")}>Cart</a
+            >
+          </li>
+          <li class="nav-item">
+            <a
+              class="nav-link"
+              href="/support"
+              on:click|preventDefault={() => navigate("support")}>Support</a
             >
           </li>
         {/if}

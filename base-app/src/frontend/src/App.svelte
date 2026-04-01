@@ -11,25 +11,42 @@
   import Profile from "./pages/Profile.svelte";
   import Orders from "./pages/Orders.svelte";
   import Support from "./pages/Support.svelte";
+  import SearchResults from "./pages/SearchResults.svelte";
+
   let page = "home";
   let currentUser = null;
   let loading = true;
-  const path = window.location.pathname.slice(1) || "home";
-  onMount(async () => {
+
+  // Helper to extract clean page name from path (ignores query params)
+  function getPageFromPath() {
     const path = window.location.pathname.slice(1) || "home";
-    page = path;
+    return path.split('?')[0]; 
+  }
+
+  onMount(async () => {
+    // 1. Set initial page on load
+    page = getPageFromPath();
+
+    // 2. Fetch User Profile
     try {
       const res = await fetch("/api/auth/profile/", { credentials: "include" });
       if (res.ok) currentUser = await res.json();
     } catch (e) {}
+    
     loading = false;
+
+    // 3. Handle Browser Back/Forward Buttons
     window.addEventListener("popstate", () => {
-      page = window.location.pathname.slice(1) || "home";
+      page = getPageFromPath();
     });
   });
 
   function navigate(newPage) {
-    page = newPage;
+    // ✅ CRITICAL FIX: Update the 'page' variable IMMEDIATELY
+    // This ensures the UI switches before the history push completes
+    page = newPage; 
+    
+    // Update browser URL
     window.history.pushState({}, "", `/${newPage === "home" ? "" : newPage}`);
   }
 
@@ -37,6 +54,7 @@
     currentUser = event.detail;
     navigate("dashboard");
   }
+
   function handleLogout() {
     fetch("/api/auth/logout/", { method: "POST", credentials: "include" })
       .then(() => {
@@ -49,10 +67,11 @@
       });
   }
 
+  // Protect Routes
   $: if (
     !loading &&
     !currentUser &&
-    (page === "dashboard" || page === "cart" || page === "profile")
+    (page === "dashboard" || page === "cart" || page === "profile" || page === "orders")
   ) {
     navigate("login");
   }
@@ -60,40 +79,67 @@
 
 <div class="d-flex flex-column min-vh-100">
   <Header {currentUser} {navigate} onLogout={handleLogout} />
+  
   <main class="flex-grow-1 container py-4">
     {#if loading}
       <div class="text-center">
         <div class="spinner-border text-primary"></div>
       </div>
-    {:else if page === "home"}<Home {navigate} />
-    {:else if page === "login"}<Login {navigate} on:login={handleLoginEvent} />
-    {:else if page === "signup"}<Signup
-        {navigate}
-        on:login={handleLoginEvent}
-      />
-    {:else if page === "product"}<ProductDetail {navigate} />
-    {:else if page === "cart"}{#if currentUser}<Cart {navigate} />{:else}<div
-          class="alert alert-warning"
-        >
-          Please login.
-        </div>{/if}
-    {:else if page === "dashboard"}{#if currentUser}<Dashboard
-          {navigate}
-          {currentUser}
-        />{:else}<div class="alert alert-warning">Access Denied.</div>{/if}
-    {:else if page === "profile"}{#if currentUser}<Profile
-          {navigate}
-          {currentUser}
-        />{:else}<div class="alert alert-warning">Please login.</div>{/if}
-    {:else if page === "orders"}{#if currentUser}<Orders
-          {navigate}
-          {currentUser}
-        />{:else}<div class="alert alert-warning">
-          Please login to view orders.
-        </div>{/if}
+      
+    {:else if page === "home"}
+      <Home {navigate} />
+      
+    {:else if page === "login"}
+      <Login {navigate} on:login={handleLoginEvent} />
+      
+    {:else if page === "signup"}
+      <Signup {navigate} on:login={handleLoginEvent} />
+      
+    {:else if  page.startsWith("product")}
+      <ProductDetail {navigate} />
+      
+    {:else if page === "cart"}
+      {#if currentUser}
+        <Cart {navigate} />
+      {:else}
+        <div class="alert alert-warning">Please login to view cart.</div>
+      {/if}
+      
+    {:else if page === "dashboard"}
+      {#if currentUser}
+        <Dashboard {navigate} {currentUser} />
+      {:else}
+        <div class="alert alert-warning">Access Denied.</div>
+      {/if}
+      
+    {:else if page === "profile"}
+      {#if currentUser}
+        <Profile {navigate} {currentUser} />
+      {:else}
+        <div class="alert alert-warning">Please login.</div>
+      {/if}
+      
+    {:else if page === "orders"}
+      {#if currentUser}
+        <Orders {navigate} {currentUser} />
+      {:else}
+        <div class="alert alert-warning">Please login to view orders.</div>
+      {/if}
+      
+    {:else if page.startsWith("search")}
+      <!-- ✅ This block will now execute when navigate('search?q=...') is called -->
+      <SearchResults {navigate} {currentUser} />
+      
     {:else if page === "support"}
       <Support {navigate} {currentUser} />
+      
+    {:else}
+      <div class="text-center">
+        <h2>404 - Page Not Found</h2>
+        <button class="btn btn-primary" on:click={() => navigate('home')}>Go Home</button>
+      </div>
     {/if}
   </main>
+  
   <Footer />
 </div>
