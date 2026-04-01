@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -30,6 +32,19 @@ def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, 'profile'):
         instance.profile.save()
 
+class Review(models.Model):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product') # One review per user per product
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.product.title} ({self.rating}⭐)"
 
 class Product(models.Model):
     title = models.CharField(max_length=200)
@@ -38,10 +53,16 @@ class Product(models.Model):
     file_url = models.URLField(blank=True, null=True)
     vendor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00, null=True, blank=True)
+    review_count = models.IntegerField(default=0)
     class Meta:
         db_table = 'api_product'
-    
+    def update_rating_stats(self):
+        """Recalculate average rating and count"""
+        stats = self.reviews.aggregate(avg=models.Avg('rating'), count=models.Count('id'))
+        self.average_rating = stats['avg'] or 0.00
+        self.review_count = stats['count'] or 0
+        self.save()
     def __str__(self):
         return self.title
 

@@ -1,0 +1,56 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - link "🛒 DigiMart" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e7]:
+        - list [ref=e8]:
+          - listitem [ref=e9]:
+            - link "Home" [ref=e10] [cursor=pointer]:
+              - /url: /
+        - list [ref=e11]:
+          - listitem [ref=e12]:
+            - link "Login" [ref=e13] [cursor=pointer]:
+              - /url: /login
+          - listitem [ref=e14]:
+            - link "Sign Up" [ref=e15] [cursor=pointer]:
+              - /url: /signup
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - generic [ref=e19]:
+        - heading "Premium Wireless Headphones" [level=1] [ref=e20]
+        - paragraph [ref=e21]: High quality Premium Wireless Headphones for sale.
+        - heading "$99.00" [level=2] [ref=e22]
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - button "1 Star" [ref=e25]: ★
+            - button "2 Star" [ref=e26]: ★
+            - button "3 Star" [ref=e27]: ★
+            - button "4 Star" [ref=e28]: ★
+            - button "5 Star" [ref=e29]: ★
+          - generic [ref=e30]: (0 reviews)
+        - button "Add to Cart" [ref=e31] [cursor=pointer]
+      - separator [ref=e32]
+      - generic [ref=e33]:
+        - heading "Customer Reviews" [level=3] [ref=e34]
+        - generic [ref=e35]:
+          - text: Please
+          - link "login" [ref=e36] [cursor=pointer]:
+            - /url: /login
+          - text: to write a review.
+        - paragraph [ref=e39]: No reviews yet. Be the first to review this product!
+  - contentinfo [ref=e40]:
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - heading "DigiMart" [level=5] [ref=e44]
+        - paragraph [ref=e45]: Your trusted digital marketplace
+      - generic [ref=e46]:
+        - link "Terms" [ref=e47] [cursor=pointer]:
+          - /url: "#"
+        - link "Privacy" [ref=e48] [cursor=pointer]:
+          - /url: "#"
+        - paragraph [ref=e49]: © 2026 DigiMart. All rights reserved.
+```

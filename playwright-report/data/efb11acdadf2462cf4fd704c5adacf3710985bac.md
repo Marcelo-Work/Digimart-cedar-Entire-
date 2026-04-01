@@ -1,0 +1,81 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e5]:
+      - link "🛒 DigiMart" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e7]:
+        - list [ref=e8]:
+          - listitem [ref=e9]:
+            - link "Home" [ref=e10] [cursor=pointer]:
+              - /url: /
+          - listitem [ref=e11]:
+            - link "Dashboard" [ref=e12] [cursor=pointer]:
+              - /url: /dashboard
+          - link "Orders" [ref=e13] [cursor=pointer]:
+            - /url: /orders
+          - listitem [ref=e14]:
+            - link "Cart" [ref=e15] [cursor=pointer]:
+              - /url: /cart
+          - listitem [ref=e16]:
+            - link "Support" [ref=e17] [cursor=pointer]:
+              - /url: /support
+          - listitem [ref=e18]:
+            - link "Profile" [ref=e19] [cursor=pointer]:
+              - /url: /profile
+        - list [ref=e20]:
+          - listitem [ref=e21]:
+            - generic [ref=e22]:
+              - text: Welcome,
+              - strong [ref=e23]: customer_public
+          - listitem [ref=e24]:
+            - button "Logout" [ref=e25] [cursor=pointer]
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - generic [ref=e29]:
+        - heading "Premium Wireless Headphones" [level=1] [ref=e30]
+        - paragraph [ref=e31]: High quality Premium Wireless Headphones for sale.
+        - heading "$99.00" [level=2] [ref=e32]
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - button "1 Star" [ref=e35]: ★
+            - button "2 Star" [ref=e36]: ★
+            - button "3 Star" [ref=e37]: ★
+            - button "4 Star" [ref=e38]: ★
+            - button "5 Star" [ref=e39]: ★
+          - generic [ref=e40]: (0 reviews)
+        - button "Add to Cart" [ref=e41] [cursor=pointer]
+      - separator [ref=e42]
+      - generic [ref=e43]:
+        - heading "Customer Reviews" [level=3] [ref=e44]
+        - generic [ref=e45]:
+          - heading "Write a Review" [level=5] [ref=e46]
+          - generic [ref=e47]: Please select a star rating.
+          - generic [ref=e48]:
+            - generic [ref=e49]: "Your Rating:"
+            - generic [ref=e51]:
+              - button "1 Star" [ref=e52] [cursor=pointer]: ★
+              - button "2 Star" [ref=e53] [cursor=pointer]: ★
+              - button "3 Star" [ref=e54] [cursor=pointer]: ★
+              - button "4 Star" [ref=e55] [cursor=pointer]: ★
+              - button "5 Star" [ref=e56] [cursor=pointer]: ★
+          - generic [ref=e57]:
+            - generic [ref=e58]: "Comment:"
+            - textbox "Share your thoughts (min 10 characters)..." [ref=e59]: This is a great product! Highly recommended.
+            - generic [ref=e60]: 44/500
+          - button "Submit Review" [active] [ref=e61] [cursor=pointer]
+        - paragraph [ref=e64]: No reviews yet. Be the first to review this product!
+  - contentinfo [ref=e65]:
+    - generic [ref=e67]:
+      - generic [ref=e68]:
+        - heading "DigiMart" [level=5] [ref=e69]
+        - paragraph [ref=e70]: Your trusted digital marketplace
+      - generic [ref=e71]:
+        - link "Terms" [ref=e72] [cursor=pointer]:
+          - /url: "#"
+        - link "Privacy" [ref=e73] [cursor=pointer]:
+          - /url: "#"
+        - paragraph [ref=e74]: © 2026 DigiMart. All rights reserved.
+```
