@@ -13,7 +13,8 @@
   import Support from "./pages/Support.svelte";
   import SearchResults from "./pages/SearchResults.svelte";
   import VendorDashboard from "./pages/VendorDashboard.svelte";
-
+  import OrderConfirmation from "./pages/OrderConfirmation.svelte";
+  import EmailLogs from "./pages/EmailLogs.svelte";
   let page = "home";
   let currentUser = null;
   let loading = true;
@@ -130,6 +131,11 @@
       <SearchResults {navigate} {currentUser} />
     {:else if page === "support"}
       <Support {navigate} {currentUser} />
+    {:else if page === "order-confirmation"}
+      <OrderConfirmation {navigate} />
+    {:else if page === "email-logs"}
+      <!-- We will create this next for Task 8 verification -->
+      <EmailLogs {navigate} />
     {:else if page === "vendor/dashboard"}
       {#if currentUser && (currentUser.role === "vendor" || currentUser.role === "admin")}
         <VendorDashboard {navigate} {currentUser} />
