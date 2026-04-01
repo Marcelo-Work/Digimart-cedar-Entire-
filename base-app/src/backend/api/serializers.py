@@ -48,10 +48,36 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
+
+    raw_total = serializers.SerializerMethodField()
+    discount_amount = serializers.SerializerMethodField()
+    final_total = serializers.SerializerMethodField()
+    applied_coupon = serializers.SerializerMethodField()
+
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'items', 'created_at']
+        fields = ['id', 'user', 'items', 'created_at', 'raw_total', 'discount_amount', 'final_total', 'applied_coupon']
         read_only_fields = ['id', 'created_at']
+
+    def get_raw_total(self, obj):
+        total = 0.0
+        for item in obj.items:
+            try:
+                product = Product.objects.get(id=item['product_id'])
+                total += float(product.price) * item['quantity']
+            except: pass
+        return total
+
+    def get_discount_amount(self, obj):
+        return float(obj.discount_amount) if obj.discount_amount else 0.0
+
+    def get_final_total(self, obj):
+        raw = self.get_raw_total(obj)
+        discount = self.get_discount_amount(obj)
+        return raw - discount
+
+    def get_applied_coupon(self, obj):
+        return obj.coupon_code if obj.coupon_code else None
 
 class CouponSerializer(serializers.ModelSerializer):
     class Meta:

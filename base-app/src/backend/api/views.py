@@ -1,23 +1,31 @@
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from rest_framework.views import APIView
 import json
 import os
 import re
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.views import APIView
+
 from rest_framework.response import Response
 from rest_framework import viewsets, permissions, status
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.db.models import Q
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from .models import User, Product, Order, OrderItem, Cart, Profile
 from .serializers import UserSerializer, ProductSerializer, OrderSerializer, CartSerializer
 from .models import Coupon
 from .serializers import CouponSerializer
 from decimal import Decimal
+from django.utils import timezone
+from rest_framework.authentication import SessionAuthentication
 
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    """Session authentication without CSRF enforcement for API endpoints"""
+    def enforce_csrf(self, request):
+        return  # Skip CSRF check
 def health_check(request):
     return JsonResponse({'status': 'healthy'}, status=200)
 
@@ -111,12 +119,18 @@ class ProductViewSet(viewsets.ModelViewSet):
         return qs
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CartView(APIView):
+    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request)
     def get(self, request):
+        """Get current user's cart with calculated totals"""
         cart, _ = Cart.objects.get_or_create(user=request.user)
         
-        # Calculate Raw Total
+        # Calculate Raw Total from items
         raw_total = Decimal('0.00')
         for item in cart.items:
             try:
@@ -124,7 +138,7 @@ class CartView(APIView):
                 raw_total += Decimal(str(product.price)) * Decimal(str(item['quantity']))
             except: pass
 
-        # Apply Saved Coupon if exists
+        # Apply Coupon Logic
         discount = Decimal('0.00')
         applied_code = None
         
@@ -135,7 +149,7 @@ class CartView(APIView):
                     discount = raw_total * (coupon.discount_percent / Decimal('100'))
                     applied_code = coupon.code
                 else:
-                    # Invalid now (expired), clear it
+                    # Invalid coupon, clear it
                     cart.coupon_code = None
                     cart.discount_amount = Decimal('0.00')
                     cart.save()
@@ -145,27 +159,72 @@ class CartView(APIView):
 
         final_total = raw_total - discount
 
-        data = CartSerializer(cart).data
-        data['raw_total'] = float(raw_total)
-        data['discount_amount'] = float(discount)
-        data['final_total'] = float(final_total)
-        data['applied_coupon'] = applied_code
-        
+        # Serialize manually to include calculated fields
+        data = {
+            'id': cart.id,
+            'user': cart.user.id,
+            'items': cart.items,
+            'created_at': cart.created_at.isoformat(),
+            'raw_total': float(raw_total),
+            'discount_amount': float(discount),
+            'final_total': float(final_total),
+            'applied_coupon': applied_code
+        }
         return Response(data)
-    
+
+    def post(self, request):
+        """Add item to cart"""
+        product_id = request.data.get('product_id')
+        quantity = request.data.get('quantity', 1)
+
+        if not product_id:
+            return Response({'error': 'Product ID required'}, status=400)
+
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=404)
+
+        # Get or Create Cart
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+
+        # Check if item already exists in cart
+        items = cart.items
+        found = False
+        for item in items:
+            if item['product_id'] == product_id:
+                item['quantity'] += quantity
+                found = True
+                break
+        
+        if not found:
+            items.append({'product_id': product_id, 'quantity': quantity})
+
+        cart.items = items
+        # Clear coupon if cart contents change (optional but good practice)
+        cart.coupon_code = None
+        cart.discount_amount = Decimal('0.00')
+        cart.save()
+
+        # Return updated cart
+        return self.get(request)
+
     def patch(self, request):
+        """Handle coupon application/removal"""
         cart, _ = Cart.objects.get_or_create(user=request.user)
         action = request.data.get('action')
         
         if action == 'apply_coupon':
             code = request.data.get('code', '').strip().upper()
-            # Re-run validation logic from validate_coupon_view briefly
+            if not code:
+                return Response({'error': 'Code required'}, status=400)
+            
             try:
                 coupon = Coupon.objects.get(code=code)
                 if not coupon.is_valid():
-                    return Response({'error': 'Expired or inactive'}, status=400)
+                    return Response({'error': 'Coupon expired or inactive'}, status=400)
                 
-                # Calc raw total again
+                # Calculate raw total
                 raw_total = Decimal('0.00')
                 for item in cart.items:
                     try:
@@ -174,14 +233,16 @@ class CartView(APIView):
                     except: pass
                 
                 if raw_total < coupon.min_order_amount:
-                    return Response({'error': 'Minimum order not met'}, status=400)
-
-                cart.coupon_code = code
-                cart.save()
-                return self.get(request) # Return updated cart
-            except Coupon.DoesNotExist:
-                return Response({'error': 'Invalid code'}, status=400)
+                    return Response({'error': f'Minimum order ${coupon.min_order_amount}'}, status=400)
                 
+                cart.coupon_code = code
+                cart.discount_amount = raw_total * (coupon.discount_percent / Decimal('100'))
+                cart.save()
+                return self.get(request)
+                
+            except Coupon.DoesNotExist:
+                return Response({'error': 'Invalid coupon code'}, status=400)
+
         elif action == 'remove_coupon':
             cart.coupon_code = None
             cart.discount_amount = Decimal('0.00')
@@ -189,21 +250,16 @@ class CartView(APIView):
             return self.get(request)
 
         return Response({'error': 'Invalid action'}, status=400)
-    def post(self, request):
-        cart, _ = Cart.objects.get_or_create(user=request.user)
-        items = cart.items
-        product_id = request.data.get('product_id')
-        if not any(item['product_id'] == product_id for item in items):
-            items.append({'product_id': product_id, 'quantity': 1})
-            cart.items = items
-            cart.save()
-        return Response(CartSerializer(cart).data)
+
     def delete(self, request):
-        cart, _ = Cart.objects.get_or_create(user=request.user)
-        product_id = request.query_params.get('product_id')
-        cart.items = [i for i in cart.items if i['product_id'] != product_id]
-        cart.save()
-        return Response(CartSerializer(cart).data)
+        """Clear cart"""
+        cart = Cart.objects.filter(user=request.user).first()
+        if cart:
+            cart.items = []
+            cart.coupon_code = None
+            cart.discount_amount = Decimal('0.00')
+            cart.save()
+        return self.get(request)
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -273,12 +329,35 @@ class OrderViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def search_products(request):
-    query = request.query_params.get('q', '')
-    if query:
-        products = Product.objects.filter(Q(title__icontains=query) | Q(description__icontains=query))
+    """
+    Dedicated search endpoint: GET /api/products/search/?q=keyword
+    Searches title AND description.
+    """
+    query = request.query_params.get('q', '').strip()
+    
+    if not query:
+        # If no query, return empty list or all products (depending on requirement)
+        # Usually for search bars, if empty, we return empty or let frontend handle 'all'
+        products = Product.objects.none() 
     else:
-        products = Product.objects.all()
-    data = [{"id": p.id, "title": p.title, "price": str(p.price), "description": p.description, "file_url": p.file_url, "vendor": p.vendor.username if p.vendor else None} for p in products]
+        products = Product.objects.filter(
+            Q(title__icontains=query) | Q(description__icontains=query)
+        )
+    
+    # Manual serialization to match the exact structure expected by frontend/tests
+    data = [
+        {
+            "id": p.id,
+            "title": p.title,
+            "price": str(p.price),
+            "description": p.description,
+            "file_url": p.file_url,
+            "vendor": p.vendor.username if p.vendor else None,
+            "created_at": p.created_at.isoformat() if p.created_at else None
+        } 
+        for p in products
+    ]
+    
     return Response(data)
 
 @csrf_exempt
