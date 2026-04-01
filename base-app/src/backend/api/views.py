@@ -1,3 +1,6 @@
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+import uuid
 import os
 import time
 import json
@@ -7,8 +10,7 @@ from django.db.models import Q, Avg, Count
 from django.db import transaction
 from django.core.mail import send_mail
 from django.conf import settings
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
+
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework import viewsets, permissions, status
@@ -17,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from django.contrib.auth import authenticate, login, logout
-
+from .tasks import send_guest_confirmation_email
 # Models & Serializers
 from .models import User, Product, Order, OrderItem, Cart, Profile, Review, Coupon, EmailLog
 from .serializers import (
@@ -120,9 +122,13 @@ class LogoutView(APIView):
             request.session.flush()
             response = Response({'success': True, 'message': 'Logged out successfully'})
             response.delete_cookie('sessionid')
+            response.delete_cookie('csrftoken')
             return response
-        except:
-            return Response({'success': True, 'message': 'Logout forced'}, status=200)
+        except Exception as e:
+            response = Response({'success': True, 'message': 'Logout forced'})
+            response.delete_cookie('sessionid')
+            response.delete_cookie('csrftoken')
+            return response
 
 class UserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -185,10 +191,20 @@ def product_detail_with_reviews(request, pk):
 # =============================================================================
 @method_decorator(csrf_exempt, name='dispatch')
 class CartView(APIView):
-    authentication_classes = [CsrfExemptSessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
     
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = [CsrfExemptSessionAuthentication]
     def get(self, request):
+        if not request.user.is_authenticated:
+            # If guest, return an empty cart structure so the page loads without error
+            # The frontend will populate this from LocalStorage
+            return Response({
+                'id': None,
+                'user': None,
+                'items': [], 
+                'final_total': 0.00,
+                'is_guest': True
+            })
         cart, _ = Cart.objects.get_or_create(user=request.user)
         raw_total = Decimal('0.00')
         
@@ -620,3 +636,118 @@ class VendorProductViewSet(viewsets.ModelViewSet):
         if request.user.profile.role == 'admin' and instance.vendor != request.user:
             return Response({'error': 'Admins cannot delete products owned by other vendors.'}, status=403)
         return super().destroy(request, *args, **kwargs)
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class GuestCheckoutView(APIView):
+    permission_classes = [permissions.AllowAny] # Anyone can access
+    
+    def post(self, request):
+        # 1. Extract Data
+        email = request.data.get('email')
+        name = request.data.get('billing_name')
+        address = request.data.get('billing_address')
+        city = request.data.get('billing_city')
+        zip_code = request.data.get('billing_zip')
+        
+        # 2. Validate Email
+        if not email:
+            return Response({'error': 'Email is required'}, status=400)
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response({'error': 'Invalid email format'}, status=400)
+            
+        # 3. Validate Required Fields
+        if not name or not address or not city or not zip_code:
+            return Response({'error': 'All billing fields are required'}, status=400)
+
+        # 4. Get Cart (Using Session Key for Guests)
+        # We assume frontend sends session cookie. If cart is tied to user only, 
+        # we need to adjust Cart model to support session_id. 
+        # For simplicity, let's assume Cart supports anonymous via session or we pass items in body.
+        # BETTER APPROACH FOR TASK 9: Accept cart items in payload for guest checkout.
+        
+        items = request.data.get('items', [])
+        if not items:
+            return Response({'error': 'Cart is empty'}, status=400)
+
+        try:
+            with transaction.atomic():
+                # Calculate Total
+                total = Decimal('0.00')
+                order_items_data = []
+                
+                for item in items:
+                    product = Product.objects.get(id=item['product_id'])
+                    qty = item['quantity']
+                    item_total = Decimal(str(product.price)) * Decimal(str(qty))
+                    total += item_total
+                    order_items_data.append({'product': product, 'qty': qty, 'total': item_total})
+
+                # Create Order (NO USER)
+                order = Order.objects.create(
+                    user=None,
+                    guest_email=email,
+                    billing_name=name,
+                    billing_address=address,
+                    billing_city=city,
+                    billing_zip=zip_code,
+                    total_amount=total,
+                    status='completed',
+                    access_token=uuid.uuid4()
+                )
+
+                # Create Order Items
+                for data in order_items_data:
+                    OrderItem.objects.create(
+                        order=order,
+                        product=data['product'],
+                        quantity=data['qty'],
+                        total_price=data['total']
+                    )
+
+                # Clear Cart (Optional: if using session cart, clear it here)
+                
+                # Trigger Async Email (Reuse Task 8 logic, modified for guests)
+                send_guest_confirmation_email(order.id)
+
+                return Response({
+                    'message': 'Order placed successfully',
+                    'order_id': order.id,
+                    'access_token': str(order.access_token),
+                    'guest_email': email
+                }, status=201)
+
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=400)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+class GuestOrderLookupView(APIView):
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request, token):
+        try:
+            order = Order.objects.get(access_token=token)
+            # Serialize manually to avoid user details
+            data = {
+                'id': order.id,
+                'status': order.status,
+                'total_amount': float(order.total_amount),
+                'guest_email': order.guest_email,
+                'billing_name': order.billing_name,
+                'created_at': order.created_at,
+                'items': [
+                    {
+                        'product': item.product.title,
+                        'quantity': item.quantity,
+                        'price': float(item.total_price)
+                    } for item in order.items.all()
+                ]
+            }
+            return Response(data)
+        except Order.DoesNotExist:
+            return Response({'error': 'Order not found'}, status=404)
+
+# Update your EmailLogViewSet to be accessible for checking guest logs too
+# (Already done in Task 8)

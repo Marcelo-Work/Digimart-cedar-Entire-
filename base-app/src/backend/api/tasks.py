@@ -117,3 +117,60 @@ def send_order_confirmation_email(order_id):
         print(f"Order {order_id} not found.")
     except Exception as e:
         print(f"Critical error in task: {e}")
+        
+@background(schedule=0)
+def send_guest_confirmation_email(order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        if not order.guest_email:
+            return
+
+        # Prepare Content
+        subject = f"Guest Order Confirmation #{order.id}"
+        body = f"""
+        Hello {order.billing_name},
+        
+        Thank you for your guest order!
+        
+        Order ID: #{order.id}
+        Total: ${order.total_amount}
+        
+        Track your order here: 
+        http://localhost:5173/guest/track/{order.access_token}
+        
+        Items:
+        {chr(10).join([f"- {i.product.title} (x{i.quantity})" for i in order.items.all()])}
+        """
+
+        # Create Log
+        log = EmailLog.objects.create(
+            recipient_email=order.guest_email,
+            subject=subject,
+            body=body,
+            related_order_id=order.id,
+            status='pending'
+        )
+
+        # Send
+        send_mail(
+            subject=subject,
+            message=body,
+            from_email='noreply@digimart.com',
+            recipient_list=[order.guest_email],
+            fail_silently=False
+        )
+
+        log.status = 'sent'
+        log.sent_at = timezone.now()
+        log.save()
+        
+        print(f"✅ Guest email sent to {order.guest_email}")
+
+    except Exception as e:
+        print(f"❌ Guest email failed: {e}")
+        # Update log if possible
+        try:
+            log.status = 'failed'
+            log.error_message = str(e)
+            log.save()
+        except: pass

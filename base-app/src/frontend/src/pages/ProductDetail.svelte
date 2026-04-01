@@ -53,25 +53,44 @@
 
   async function addToCart() {
     if (!product) return;
-    try {
-      const res = await fetch("/api/cart/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ product_id: product.id, quantity: 1 }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert("✅ Added to cart successfully!");
-      } else {
-        alert("❌ Failed to add to cart: " + (data.error || "Unknown error"));
+    if (currentUser) {
+      try {
+        const res = await fetch("/api/cart/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ product_id: product.id, quantity: 1 }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert("✅ Added to cart successfully!");
+        } else {
+          alert("❌ Failed to add to cart: " + (data.error || "Unknown error"));
+        }
+      } catch (e) {
+        console.error(e);
+        alert("❌ Network error.");
       }
-    } catch (e) {
-      console.error(e);
-      alert("❌ Network error.");
+    } else {
+      let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+      // Check if item exists
+      const existing = cart.find((item) => item.product_id === product.id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({
+          product_id: product.id,
+          quantity: 1,
+          price: product.price,
+        });
+      }
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+      alert("Added to guest cart!");
     }
   }
 
@@ -165,7 +184,10 @@
 
       <!-- Submit Form (Only for Authenticated Users) -->
       {#if loading}
-      <div class="text-center"><div class="spinner-border spinner-border-sm"></div> Checking login status...</div>
+        <div class="text-center">
+          <div class="spinner-border spinner-border-sm"></div>
+          Checking login status...
+        </div>
       {:else if currentUser && currentUser.id}
         <div class="card p-3 mb-4 bg-light">
           <h5>Write a Review</h5>

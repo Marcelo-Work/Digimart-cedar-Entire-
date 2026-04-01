@@ -15,6 +15,8 @@
   import VendorDashboard from "./pages/VendorDashboard.svelte";
   import OrderConfirmation from "./pages/OrderConfirmation.svelte";
   import EmailLogs from "./pages/EmailLogs.svelte";
+  import GuestCheckout from "./pages/GuestCheckout.svelte";
+  import GuestTrackOrder from "./pages/GuestTrackOrder.svelte";
   let page = "home";
   let currentUser = null;
   let loading = true;
@@ -78,7 +80,6 @@
     !loading &&
     !currentUser &&
     (page === "dashboard" ||
-      page === "cart" ||
       page === "profile" ||
       page === "orders")
   ) {
@@ -103,11 +104,8 @@
     {:else if page.startsWith("product")}
       <ProductDetail {navigate} {currentUser} />
     {:else if page === "cart"}
-      {#if currentUser}
         <Cart {navigate} {currentUser} />
-      {:else}
-        <div class="alert alert-warning">Please login to view cart.</div>
-      {/if}
+
     {:else if page === "dashboard"}
       {#if currentUser}
         <Dashboard {navigate} {currentUser} />
@@ -136,6 +134,10 @@
     {:else if page === "email-logs"}
       <!-- We will create this next for Task 8 verification -->
       <EmailLogs {navigate} />
+    {:else if page === "guest/checkout"}
+      <GuestCheckout {navigate} />
+    {:else if page.startsWith("guest/success") || page.startsWith("guest/track")}
+      <GuestTrackOrder {navigate} />
     {:else if page === "vendor/dashboard"}
       {#if currentUser && (currentUser.role === "vendor" || currentUser.role === "admin")}
         <VendorDashboard {navigate} {currentUser} />

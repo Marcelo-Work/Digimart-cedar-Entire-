@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -66,9 +67,16 @@ class Product(models.Model):
     def __str__(self):
         return self.title
 
-
+def generate_unique_token():
+    return str(uuid.uuid4())
 class Order(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    guest_email = models.EmailField(blank=True, null=True)
+    access_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    billing_name = models.CharField(max_length=255, blank=True, null=True)
+    billing_address = models.TextField(blank=True, null=True)
+    billing_city = models.CharField(max_length=100, blank=True, null=True)
+    billing_zip = models.CharField(max_length=20, blank=True, null=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     status = models.CharField(max_length=20, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -77,7 +85,9 @@ class Order(models.Model):
         db_table = 'api_order'
     
     def __str__(self):
-        return f"Order {self.id} by {self.user.username}"
+        if self.user:
+            return f"Order #{self.id} by {self.user.username}"
+        return f"Order #{self.id} by Guest ({self.guest_email})"
 
 
 class OrderItem(models.Model):
@@ -85,7 +95,7 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
     license_key = models.CharField(max_length=100, blank=True, null=True)
-    
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     class Meta:
         db_table = 'api_orderitem'
     
