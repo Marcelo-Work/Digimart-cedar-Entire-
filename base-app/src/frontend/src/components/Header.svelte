@@ -3,14 +3,57 @@
 
   export let currentUser = null;
   export let navigate = () => {};
-
+  let loggingOut = false;
   const dispatch = createEventDispatcher();
 
-  function handleLogoutClick() {
-    dispatch("logout", {});
+    async function handleLogout() {
+      loggingOut = true;
+      
+      try {
+        // 1. Call Backend Logout
+        const res = await fetch("/api/auth/logout/", {
+          method: "POST",
+          credentials: "include", // Important to send the session cookie so backend knows who to log out
+          headers: {
+            "Content-Type": "application/json",
+            // If your CSRF protection is strict on POST, you might need the token here
+            // 'X-CSRFToken': getCookie('csrftoken')
+          },
+        });
 
-    window.location.href = "/";
-  }
+        // 2. Clear Frontend State
+        currentUser = null; // Reset user variable
+
+        // 3. Clear LocalStorage (Cart, Drafts, etc.)
+        localStorage.clear();
+
+        // 4. Force Delete Cookies via JavaScript (Safety Net)
+        // This ensures deletion even if the backend header fails slightly
+        document.cookie.split(";").forEach(function (c) {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date().toUTCString() + ";path=/",
+            );
+        });
+
+        // 5. Redirect to Home
+        navigate("home");
+
+        // 6. Force Reload (Optional but recommended to clear any in-memory caches)
+        // window.location.href = '/';
+      } catch (e) {
+        console.error("Logout error:", e);
+        // Even on error, clear local state to prevent stuck UI
+        currentUser = null;
+        localStorage.clear();
+        navigate("home");
+      } finally {
+        loggingOut = false;
+      }
+    }
+
 </script>
 
 <nav
@@ -47,6 +90,13 @@
             on:click|preventDefault={() => navigate("home")}>Home</a
           >
         </li>
+        <li class="nav-item">
+            <a
+              class="nav-link"
+              href="/cart"
+              on:click|preventDefault={() => navigate("cart")}>Cart</a
+            >
+          </li>
         {#if currentUser && currentUser.role === "vendor"}
           <a
             class="nav-link"
@@ -70,13 +120,7 @@
           >
             Orders
           </a>
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              href="/cart"
-              on:click|preventDefault={() => navigate("cart")}>Cart</a
-            >
-          </li>
+          
           <li class="nav-item">
             <a
               class="nav-link"
@@ -112,9 +156,9 @@
           <li class="nav-item">
             <button
               class="btn btn-outline-light btn-sm"
-              on:click={handleLogoutClick}
+              on:click={handleLogout}
             >
-              Logout
+              {#if loggingOut}Logging out...{:else}Logout{/if}
             </button>
           </li>
         {:else}

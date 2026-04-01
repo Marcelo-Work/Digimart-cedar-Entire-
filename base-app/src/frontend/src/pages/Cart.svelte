@@ -7,9 +7,26 @@
   let couponCode = "";
   let couponError = "";
   let applying = false;
-  let errorMessage = '';
+  let errorMessage = "";
+  let currentUser = null;
   onMount(async () => {
-    await fetchCart();
+    if (currentUser) {
+      await fetchCart();
+    } else {
+      const stored = localStorage.getItem("cart");
+      if (stored) {
+        const items = JSON.parse(stored);
+        // Calculate total manually for display
+        const total = items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        );
+        cart = { items, final_total: total };
+      } else {
+        cart = { items: [], final_total: 0 };
+      }
+    }
+    loading = false;
   });
 
   async function fetchCart() {
@@ -110,7 +127,6 @@
       >Browse Products</button
     >
   {:else}
-    
     <ul class="list-group mb-4">
       {#each cart.items as item}
         <li class="list-group-item">
@@ -167,17 +183,37 @@
       <h3 class="display-6 text-primary mt-2" data-testid="cart-total">
         Total: ${cart.final_total?.toFixed(2)}
       </h3>
-      <button
-        class="btn btn-success btn-lg w-100"
-        on:click={handleCheckout}
-        disabled={loading}
-      >
-        {#if loading}
-          <span class="spinner-border spinner-border-sm"></span> Processing...
-        {:else}
+      {#if currentUser}
+        <!-- Registered User Checkout -->
+        <button
+          class="btn btn-success btn-lg w-100 mt-3"
+          on:click={handleCheckout}
+        >
           Checkout
-        {/if}
-      </button>
+        </button>
+      {:else}
+        <!-- ✅ GUEST USER OPTIONS -->
+        <div class="w-100 mt-3">
+          <p class="text-muted mb-2">Not logged in? You have two options:</p>
+
+          <!-- Option 1: Guest Checkout -->
+          <button
+            class="btn btn-primary btn-lg w-100 mb-2"
+            on:click={() => navigate("guest/checkout")}
+            data-testid="guest-checkout"
+          >
+            Checkout as Guest
+          </button>
+
+          <!-- Option 2: Login -->
+          <button
+            class="btn btn-outline-secondary btn-lg w-100"
+            on:click={() => navigate("login")}
+          >
+            Login to Checkout
+          </button>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
